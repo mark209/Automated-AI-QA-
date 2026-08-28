@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.env.local
+.env.*.local
+coverage/
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.env*.local
+coverage/
+*.log
+*.err
+.superpowers/sdd/*/progress.md
+.superpowers/sdd/*/task-1-brief.md
