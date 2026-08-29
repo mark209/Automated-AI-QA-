@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canTransitionJob, nextCallStatus } from "@/lib/voice-qa/processing-jobs";
+import { canTransitionJob, getProcessingEstimate, nextCallStatus } from "@/lib/voice-qa/processing-jobs";
 
 describe("processing job state transitions", () => {
   it("moves a queued transcription job into processing", () => {
@@ -13,5 +13,16 @@ describe("processing job state transitions", () => {
 
   it("allows failed jobs to retry", () => {
     expect(canTransitionJob("FAILED", "QUEUED")).toBe(true);
+  });
+
+  it("estimates completion from the recording duration and current stage", () => {
+    expect(getProcessingEstimate("TRANSCRIBING", 180, 0)).toEqual({
+      label: "About 1 minute remaining",
+      seconds: 60,
+    });
+    expect(getProcessingEstimate("ANALYZING", 180, 0)).toEqual({
+      label: "About 30 seconds remaining",
+      seconds: 30,
+    });
   });
 });

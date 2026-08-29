@@ -18,3 +18,12 @@ export function nextCallStatus(_current: CallStatus, jobType: JobType): CallStat
   if (jobType === "EVALUATION") return "ANALYZING";
   return "QUEUED";
 }
+
+export function getProcessingEstimate(status: CallStatus, durationSeconds: number | null, queuedJobs = 0) {
+  if (!["UPLOADED", "QUEUED", "TRANSCRIBING", "TRANSCRIBED", "ANALYZING"].includes(status)) return null;
+  const duration = Math.max(0, durationSeconds ?? 0);
+  const stageSeconds = status === "ANALYZING" || status === "TRANSCRIBED" ? Math.max(30, duration / 6) : Math.max(60, duration / 3);
+  const seconds = Math.max(30, Math.ceil((stageSeconds + queuedJobs * 30) / 30) * 30);
+  const roundedMinutes = Math.round(seconds / 60);
+  return { seconds, label: seconds < 60 ? `About ${seconds} seconds remaining` : `About ${roundedMinutes} minute${roundedMinutes === 1 ? "" : "s"} remaining` };
+}
