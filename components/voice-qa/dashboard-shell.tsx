@@ -61,11 +61,11 @@ export function DashboardShell() {
         <SidebarGroup title="SETTINGS" items={settingsItems} className="mt-8" />
         <AuthUserMenu />
       </aside>
-      <main className="min-h-screen lg:pl-[248px]">
-        <div className="mx-auto max-w-[1500px] px-5 pb-10 pt-7 sm:px-8 lg:px-10">
-          <header className="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-start">
+      <main className="min-h-screen min-w-0 lg:pl-[248px]">
+        <div className="w-full min-w-0 px-5 pb-10 pt-7 sm:px-8 lg:px-10">
+          <header className="mb-7 flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
             <div className="pl-12 lg:pl-0"><h1 className="font-display text-[30px] font-semibold tracking-[-0.04em]">Dashboard</h1><p className="mt-1 text-sm text-muted">Overview of voice quality performance and recent evaluations.</p></div>
-            <div className="flex items-center gap-3 self-end md:self-start"><button aria-label="Help" className="focus-ring hidden rounded-lg p-2 text-slate-400 hover:bg-white/10 md:block"><CircleHelp size={20} /></button><button aria-label="Notifications" className="focus-ring hidden rounded-lg p-2 text-slate-400 hover:bg-white/10 md:block"><Bell size={20} /></button><button className="focus-ring surface flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700"><span>May 19 – May 25, 2025</span><ChevronDown size={16} /></button><button className="focus-ring surface flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700"><Filter size={16} /><span className="hidden sm:inline">Filters</span></button></div>
+            <div className="dashboard-toolbar flex flex-wrap items-center justify-end gap-3 self-end lg:self-start"><button aria-label="Help" className="focus-ring hidden rounded-lg p-2 text-slate-400 hover:bg-white/10 md:block"><CircleHelp size={20} /></button><button aria-label="Notifications" className="focus-ring hidden rounded-lg p-2 text-slate-400 hover:bg-white/10 md:block"><Bell size={20} /></button><button className="focus-ring surface flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700"><span>May 19 – May 25, 2025</span><ChevronDown size={16} /></button><button className="focus-ring surface flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700"><Filter size={16} /><span className="hidden sm:inline">Filters</span></button></div>
           </header>
           <DashboardOverview />
         </div>
