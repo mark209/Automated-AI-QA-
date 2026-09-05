@@ -25,6 +25,11 @@ export async function processNextTranscriptionJob() {
     await supabase.from("processing_jobs").upsert({ call_id: call.id, job_type: "EVALUATION", status: "QUEUED" }, { onConflict: "call_id,job_type" });
     await supabase.from("calls").update({ status: "TRANSCRIBED", duration_seconds: transcript.durationSeconds }).eq("id", call.id);
   } catch (error) {
+    console.error("Voice QA transcription failed", {
+      callId: call.id,
+      jobId: job.id,
+      error: error instanceof Error ? error.message : String(error),
+    });
     await supabase.from("processing_jobs").update({ status: "FAILED", error_code: "TRANSCRIPTION_FAILED", error_message: error instanceof Error ? error.message.slice(0, 500) : "Transcription failed." }).eq("id", job.id);
     await supabase.from("calls").update({ status: "TRANSCRIPTION_FAILED" }).eq("id", call.id);
     return false;
