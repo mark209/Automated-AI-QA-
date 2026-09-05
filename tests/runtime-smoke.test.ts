@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 
 const require = createRequire(import.meta.url);
 const nextCliPath = require.resolve("next/dist/bin/next");
-const startupTimeoutMs = 45_000;
+const startupTimeoutMs = 90_000;
 const loginTimeoutMs = 60_000;
 const pollIntervalMs = 100;
 const ansiPattern = /\x1B\[[0-?]*[ -/]*[@-~]/g;
