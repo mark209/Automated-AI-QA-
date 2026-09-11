@@ -1,0 +1,25 @@
+# Paid background worker; review Render's displayed price before applying.
+services:
+  - type: worker
+    name: voice-qa-worker
+    runtime: node
+    branch: master
+    plan: 0.5c-512mb
+    numInstances: 1
+    buildCommand: npm ci --include=dev
+    startCommand: npm run worker:start
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_TRANSCRIPTION_MODEL
+        value: gpt-4o-transcribe-diarize
+      - key: OPENAI_EVALUATION_MODEL
+        sync: false
+      - key: VOICE_QA_WORKER_POLL_INTERVAL_MS
+        value: "5000"

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAuthApi } from "@/lib/supabase/auth-api";
+import { getJobProgress } from "@/lib/voice-qa/job-progress";
+import type { CallStatus } from "@/lib/voice-qa/processing-jobs";
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
@@ -25,5 +27,6 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     supabase.from("qualification_evaluations").select("id, rules_version, status, input, created_at, updated_at, qualification_criteria_results(id, criterion_key, label, required, outcome, value, reason, evidence, sort_order)").eq("call_id", id).maybeSingle(),
   ]);
 
-  return NextResponse.json({ call, transcript, job, evaluationJob, qualification });
+  const progress = getJobProgress(call.status as CallStatus, job, evaluationJob);
+  return NextResponse.json({ call: { ...call, status: progress.status }, processingNotice: progress.notice, transcript, job, evaluationJob, qualification });
 }

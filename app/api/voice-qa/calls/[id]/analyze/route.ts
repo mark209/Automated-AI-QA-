@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAuthApi } from "@/lib/supabase/auth-api";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
@@ -13,6 +14,9 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
   const { data: membership } = await supabase.from("organization_members").select("role").eq("organization_id", call.organization_id).eq("user_id", user.id).in("role", ["ADMIN", "QA_SUPERVISOR", "QA_ANALYST"]).maybeSingle();
   if (!membership) return NextResponse.json({ error: "You do not have permission to analyze this call." }, { status: 403 });
 
+  // Organization and role checks above must precede privileged status writes.
+  const admin = createSupabaseAdminClient();
+
   const [{ data: existing }, { data: evaluationJob }] = await Promise.all([
     supabase.from("processing_jobs").select("id, status, attempts").eq("call_id", id).eq("job_type", "TRANSCRIPTION").maybeSingle(),
     supabase.from("processing_jobs").select("id, status, attempts").eq("call_id", id).eq("job_type", "EVALUATION").maybeSingle(),
@@ -20,10 +24,11 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
   if (existing?.status === "COMPLETED" && evaluationJob?.status === "FAILED") {
     const { data: job } = await supabase.from("processing_jobs").update({ status: "QUEUED", error_code: null, error_message: null }).eq("id", evaluationJob.id).select("id, status, attempts").single();
     if (!job) return NextResponse.json({ error: "Unable to retry evaluation." }, { status: 500 });
-    await supabase.from("calls").update({ status: "TRANSCRIBED" }).eq("id", id);
+    const { error } = await admin.from("calls").update({ status: "TRANSCRIBED" }).eq("id", id);
+    if (error) return NextResponse.json({ error: "Evaluation was queued, but its display status could not be updated." }, { status: 500 });
     return NextResponse.json(job, { status: 202 });
   }
-  if (existing?.status === "PROCESSING" || existing?.status === "COMPLETED") return NextResponse.json(existing, { status: 202 });
+  if (existing?.status === "QUEUED" || existing?.status === "PROCESSING" || existing?.status === "COMPLETED") return NextResponse.json(existing, { status: 202 });
 
   let job;
   if (existing?.status === "FAILED") {
@@ -34,6 +39,7 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
     job = result.data;
   }
   if (!job) return NextResponse.json({ error: "Unable to queue transcription." }, { status: 500 });
-  await supabase.from("calls").update({ status: "QUEUED" }).eq("id", id);
+  const { error } = await admin.from("calls").update({ status: "QUEUED" }).eq("id", id);
+  if (error) return NextResponse.json({ error: "Transcription was queued, but its display status could not be updated." }, { status: 500 });
   return NextResponse.json(job, { status: 202 });
 }
