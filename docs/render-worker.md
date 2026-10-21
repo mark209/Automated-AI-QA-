@@ -6,7 +6,7 @@ The Vercel website queues recordings. A separate Render background worker must s
 2. Open https://dashboard.render.com/blueprint/new?repo=https://github.com/mark209/Automated-AI-QA- and connect GitHub if prompted.
 3. Select `master`, and enter the requested environment variables directly in Render. Use the same Supabase project as the Vercel website. Copy `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, and `OPENAI_EVALUATION_MODEL` from your existing deployment configuration. Do not put secret values in GitHub.
 4. Review the worker plan and click Apply. The worker uses `npm ci --include=dev` to install the TypeScript runner and `npm run worker:start` to start using hosted environment variables, without a local `.env.local` file.
-5. Confirm the logs show `Voice QA worker started`. Existing QUEUED jobs are picked up automatically; do not re-upload recordings. Running the worker incurs OpenAI usage as it processes pending recordings.
+5. Confirm the logs show `ARC AI Engine worker started`. Existing QUEUED jobs are picked up automatically; do not re-upload recordings. Running the worker incurs OpenAI usage as it processes pending recordings.
 6. Open a queued recording on the website. Confirm transcription starts, the transcript appears, and evaluation completes against its selected template. Confirm the job attempts increase and completed timestamps are saved. Check logs for missing configuration, database RPC errors, and OpenAI quota failures if it does not progress.
 7. Deploy the web changes on Vercel as well to show corrected statuses and delayed-processing messages.
 

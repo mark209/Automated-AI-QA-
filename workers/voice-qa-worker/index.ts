@@ -7,7 +7,7 @@ for (const key of ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "OPE
   if (!process.env[key]) throw new Error(`Worker configuration missing: ${key}`);
 }
 if (!Number.isFinite(intervalMs) || intervalMs < 1000) throw new Error("Worker poll interval must be at least 1000 ms.");
-console.info("Voice QA worker started; polling transcription and evaluation queues.");
+console.info("ARC AI Engine worker started; polling transcription and evaluation queues.");
 
 async function run() {
   let processed = false;

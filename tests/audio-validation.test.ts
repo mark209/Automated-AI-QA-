@@ -24,4 +24,16 @@ describe("validateAudioBuffer", () => {
     expect(result.valid).toBe(false);
     expect(result.error).toContain("100 MB");
   });
+
+  it("uses the configured upload limit", () => {
+    const result = validateAudioBuffer({
+      filename: "call.mp3",
+      mimeType: "audio/mpeg",
+      size: 2 * 1024 * 1024,
+      bytes: new Uint8Array([0x49, 0x44, 0x33]),
+      maxSizeBytes: 1024 * 1024,
+    });
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain("1 MB");
+  });
 });

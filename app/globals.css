@@ -67,12 +67,6 @@ a { color: inherit; }
 .table-row { display: grid; border-color: var(--line); }
 .table-row:hover { background: rgba(214, 83, 104, 0.055); }
 .empty-state { color: var(--muted); }
-@media (max-width: 1279px) {
-  .dashboard-toolbar button[aria-label='Help'],
-  .dashboard-toolbar button[aria-label='Notifications'] { display: none; }
-  .dashboard-toolbar > button:last-child span { display: none; }
-}
-
 input, select, textarea {
   color: var(--ink);
   background-color: rgba(9, 6, 8, 0.42);
@@ -97,7 +91,7 @@ input:-webkit-autofill:focus {
 .text-red-700, .text-red-800 { color: var(--danger) !important; }
 .border-slate-300, .border-blue-200, .border-emerald-200, .border-amber-200, .border-red-200 { border-color: var(--line) !important; }
 .divide-\[var\(--line\)\] > :not(:last-child) { border-color: var(--line); }
-.hover\\:bg-slate-50:hover, .hover\\:bg-white:hover { background-color: rgba(214, 83, 104, 0.08) !important; }
+.hover\:bg-slate-50:hover, .hover\:bg-white:hover { background-color: rgba(214, 83, 104, 0.08) !important; }
 
 @media (prefers-reduced-motion: no-preference) {
   button, a, input, select, textarea { transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease; }

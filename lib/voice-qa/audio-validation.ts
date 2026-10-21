@@ -1,4 +1,4 @@
-const MAX_AUDIO_SIZE = 100 * 1024 * 1024;
+const DEFAULT_MAX_AUDIO_SIZE_MB = 100;
 const supportedExtensions = new Set([".mp3", ".wav", ".m4a"]);
 
 type AudioValidationInput = {
@@ -6,6 +6,7 @@ type AudioValidationInput = {
   mimeType: string;
   size: number;
   bytes: Uint8Array;
+  maxSizeBytes?: number;
 };
 
 export type AudioValidationResult = {
@@ -16,7 +17,8 @@ export type AudioValidationResult = {
 
 export function validateAudioBuffer(input: AudioValidationInput): AudioValidationResult {
   if (input.size <= 0) return invalid("The audio file is empty.");
-  if (input.size > MAX_AUDIO_SIZE) return invalid("Audio files must be 100 MB or smaller.");
+  const maxSizeBytes = input.maxSizeBytes ?? getMaxAudioSizeBytes();
+  if (input.size > maxSizeBytes) return invalid(`Audio files must be ${Math.floor(maxSizeBytes / (1024 * 1024))} MB or smaller.`);
 
   const extension = input.filename.slice(input.filename.lastIndexOf(".")).toLowerCase();
   if (!supportedExtensions.has(extension)) return invalid("Only MP3, WAV, and M4A files are supported.");
@@ -33,6 +35,12 @@ export function validateAudioBuffer(input: AudioValidationInput): AudioValidatio
   if (input.mimeType && !allowedMimeTypes.has(input.mimeType.toLowerCase())) return invalid("The uploaded MIME type does not match the audio format.");
 
   return { valid: true, detectedType };
+}
+
+export function getMaxAudioSizeBytes() {
+  const configuredSizeMb = Number(process.env.VOICE_QA_MAX_AUDIO_SIZE_MB ?? DEFAULT_MAX_AUDIO_SIZE_MB);
+  const sizeMb = Number.isFinite(configuredSizeMb) && configuredSizeMb > 0 ? configuredSizeMb : DEFAULT_MAX_AUDIO_SIZE_MB;
+  return Math.floor(sizeMb * 1024 * 1024);
 }
 
 function detectAudioType(bytes: Uint8Array): AudioValidationResult["detectedType"] {

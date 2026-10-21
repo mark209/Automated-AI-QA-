@@ -3,18 +3,10 @@ import type { CallStatus } from "@/lib/voice-qa/processing-jobs";
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAuthApi } from "@/lib/supabase/auth-api";
-import { validateAudioBuffer } from "@/lib/voice-qa/audio-validation";
+import { getMaxAudioSizeBytes, validateAudioBuffer } from "@/lib/voice-qa/audio-validation";
 import { templateBelongsToOrganization } from "@/lib/voice-qa/template-validation";
 
 export async function POST(request: Request) {
-  const formData = await request.formData().catch(() => null);
-  const file = formData?.get("file");
-  if (!(file instanceof File)) return NextResponse.json({ error: "Choose an audio recording to upload." }, { status: 400 });
-
-  const buffer = new Uint8Array(await file.arrayBuffer());
-  const validation = validateAudioBuffer({ filename: file.name, mimeType: file.type, size: file.size, bytes: buffer });
-  if (!validation.valid || !validation.detectedType) return NextResponse.json({ error: validation.error ?? "The audio file could not be validated." }, { status: 400 });
-
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await getAuthApi(supabase).getUser();
   if (!user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
@@ -23,18 +15,35 @@ export async function POST(request: Request) {
   if (membershipError) return NextResponse.json({ error: "Unable to verify organization membership." }, { status: 500 });
   if (!membership) return NextResponse.json({ error: "You do not have permission to upload calls." }, { status: 403 });
 
+  const maxAudioSizeBytes = getMaxAudioSizeBytes();
+  const contentLength = Number(request.headers.get("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > maxAudioSizeBytes + 1024 * 1024) {
+    return NextResponse.json({ error: `Audio files must be ${Math.floor(maxAudioSizeBytes / (1024 * 1024))} MB or smaller.` }, { status: 413 });
+  }
+  const formData = await request.formData().catch(() => null);
+  const file = formData?.get("file");
+  if (!(file instanceof File)) return NextResponse.json({ error: "Choose an audio recording to upload." }, { status: 400 });
+  if (file.size > maxAudioSizeBytes) return NextResponse.json({ error: `Audio files must be ${Math.floor(maxAudioSizeBytes / (1024 * 1024))} MB or smaller.` }, { status: 413 });
   const agentId = textValue(formData?.get("agentId"));
   const templateVersionId = textValue(formData?.get("templateVersionId"));
+  if (!templateVersionId) return NextResponse.json({ error: "Choose a QA template before uploading so the call can be evaluated." }, { status: 400 });
   if (agentId) {
-    const { data: agent } = await supabase.from("agents").select("id").eq("id", agentId).eq("organization_id", membership.organization_id).maybeSingle();
+    const { data: agent, error: agentError } = await supabase.from("agents").select("id").eq("id", agentId).eq("organization_id", membership.organization_id).maybeSingle();
+    if (agentError) return NextResponse.json({ error: "Unable to verify the selected agent." }, { status: 500 });
     if (!agent) return NextResponse.json({ error: "The selected agent does not belong to your organization." }, { status: 400 });
   }
   if (templateVersionId) {
-    const { data: version } = await supabase.from("qa_template_versions").select("id, template_id").eq("id", templateVersionId).maybeSingle();
+    const { data: version, error: versionError } = await supabase.from("qa_template_versions").select("id, template_id").eq("id", templateVersionId).maybeSingle();
+    if (versionError) return NextResponse.json({ error: "Unable to verify the selected QA template." }, { status: 500 });
     if (!version) return NextResponse.json({ error: "The selected QA template could not be found." }, { status: 400 });
-    const { data: template } = await supabase.from("qa_templates").select("id, organization_id").eq("id", version.template_id).maybeSingle();
+    const { data: template, error: templateError } = await supabase.from("qa_templates").select("id, organization_id").eq("id", version.template_id).maybeSingle();
+    if (templateError) return NextResponse.json({ error: "Unable to verify the selected QA template." }, { status: 500 });
     if (!templateBelongsToOrganization(template?.organization_id, membership.organization_id)) return NextResponse.json({ error: "The selected QA template does not belong to your organization." }, { status: 400 });
   }
+
+  const buffer = new Uint8Array(await file.arrayBuffer());
+  const validation = validateAudioBuffer({ filename: file.name, mimeType: file.type, size: file.size, bytes: buffer, maxSizeBytes: maxAudioSizeBytes });
+  if (!validation.valid || !validation.detectedType) return NextResponse.json({ error: validation.error ?? "The audio file could not be validated." }, { status: 400 });
 
   const callId = crypto.randomUUID();
   const storagePath = `${membership.organization_id}/${callId}/${safeFilename(file.name)}`;

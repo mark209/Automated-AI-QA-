@@ -140,7 +140,7 @@ describe("Next runtime smoke", () => {
       const html = await fetchLoginPage(localUrl, logs);
 
       expect(new URL(localUrl).port).not.toBe("3000");
-      expect(html).toContain("Voice QA");
+      expect(html).toContain("QA AI Automation");
       expect(html).not.toContain("__next_error__");
       expect(html.toLowerCase()).not.toContain("application error");
     } finally {

@@ -10,7 +10,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   try {
     supabase = await createSupabaseServerClient();
   } catch {
-    return NextResponse.json({ error: "Voice QA data service is not configured." }, { status: 503 });
+    return NextResponse.json({ error: "QA AI Automation data service is not configured." }, { status: 503 });
   }
   const { data: { user } } = await getAuthApi(supabase).getUser();
   if (!user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
